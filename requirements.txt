@@ -2,3 +2,4 @@ langchain
 pandas
 PyYAML
 streamlit
+openai
