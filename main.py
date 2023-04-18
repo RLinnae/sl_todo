@@ -117,7 +117,7 @@ main_task_n:
                         pickle.dump(subtasks, f) 
                     #Show Preview
                     with tab1_main.container():
-                        st.dataframe("## Preview")
+                        st.write("## Preview")
                         st.write(subtasks)     
                     #Parse JSON output
                     template2 = """parse the following and return only the VALID YAML Structure, remove any unicode which may cause an error ' ' ' {subtasks} ' ' '"""
