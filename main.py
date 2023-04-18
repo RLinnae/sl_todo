@@ -115,7 +115,10 @@ main_task_n:
                     #write subtasks to a file (debugging)
                     with open("subtasks.pkl", "wb") as f: 
                         pickle.dump(subtasks, f) 
-                        
+                    #Show Preview
+                    with tab1_main.container():
+                        st.dataframe("## Preview")
+                        st.write(subtasks)     
                     #Parse JSON output
                     template2 = """parse the following and return only the VALID YAML Structure, remove any unicode which may cause an error ' ' ' {subtasks} ' ' '"""
                     prompt2 = PromptTemplate(
@@ -135,8 +138,9 @@ main_task_n:
                     # #read the subtasks from file (debugging)
                     # with open("subtasks.pkl", "rb") as f: 
                     #     subtasks = pickle.load(f) 
-                    # #print(subtasks)    
-                    st.write(subtasks_parsed)                   
+                    # #print(subtasks)
+   
+                                    
                     
                     #Clean up the otuput to remove quotes (could use another YAML parser to work around this)
                     #subtasks_parse_quote = subtasks.replace('"', '')
@@ -189,6 +193,7 @@ main_task_n:
                         print(f'Task {task_number}: {name}\nHow: {how}\nQuote: "{quote}"\n');
 
                     #print("\nSummary: " , df.loc["summary_encouragement",df.columns[0]])
+                    st.write(subtasks) 
                     
 
             except Exception as e:
