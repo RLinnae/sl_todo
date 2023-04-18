@@ -128,9 +128,9 @@ main_task_n:
                     subtasks_parsed = chain2.run({'subtasks': subtasks})
                     print(subtasks_parsed)
                     
-                    #write subtasks to a file (debugging)
-                    with open("subtasks_parsed.pkl", "wb") as f: 
-                        pickle.dump(subtasks_parsed, f) 
+                    #write subtasks to a file (for debugging)
+                    #with open("subtasks_parsed.pkl", "wb") as f: 
+                    #    pickle.dump(subtasks_parsed, f) 
 
                     # #read the subtasks from file (debugging)
                     # with open("subtasks.pkl", "rb") as f: 
