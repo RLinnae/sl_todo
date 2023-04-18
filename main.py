@@ -129,7 +129,7 @@ main_task_n:
                         chain2 = LLMChain(llm=llm, prompt=prompt2, verbose=True)
                     st.success('output cleaned')
                     subtasks_parsed = chain2.run({'subtasks': subtasks})
-                    print(subtasks_parsed)
+                    #print(subtasks_parsed)
                     
                     #write subtasks to a file (for debugging)
                     #with open("subtasks_parsed.pkl", "wb") as f: 
@@ -145,7 +145,7 @@ main_task_n:
                     #Clean up the otuput to remove quotes (could use another YAML parser to work around this)
                     #subtasks_parse_quote = subtasks.replace('"', '')
                     #st.write(subtasks_parse_quote)
-                    with st.spinner('Processing final output'):
+                    with st.spinner('refining'):
                         yaml_str = subtasks_parsed
                         # Parse the YAML string
                         yaml_obj = yaml.safe_load(yaml_str)
