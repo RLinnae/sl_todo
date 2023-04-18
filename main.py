@@ -136,37 +136,37 @@ main_task_n:
                     # with open("subtasks.pkl", "rb") as f: 
                     #     subtasks = pickle.load(f) 
                     # #print(subtasks)    
-                                        
+                    st.write(subtasks_parsed)                   
                     
                     #Clean up the otuput to remove quotes (could use another YAML parser to work around this)
                     #subtasks_parse_quote = subtasks.replace('"', '')
                     #st.write(subtasks_parse_quote)
-                    
-                    yaml_str = subtasks_parsed
-                    # Parse the YAML string
-                    yaml_obj = yaml.safe_load(yaml_str)
-                    # Convert to pandas dataframe
-                    #df = pd.pandas.json_normalize(yaml_obj)
-                    df = pd.DataFrame(yaml_obj)
-                    
-                    # Assume my_var is a variable containing valid JSON
-                    #json_str = json.dumps(subtasks) # Convert variable into JSON string
-                    #df = pd.read_json(json_str) # Read JSON string into dataframe
-                    #st.dataframe(df)
-                    
-                    # Create an empty list
-                    tasks = []
+                    with st.spinner('Processing final output'):
+                        yaml_str = subtasks_parsed
+                        # Parse the YAML string
+                        yaml_obj = yaml.safe_load(yaml_str)
+                        # Convert to pandas dataframe
+                        #df = pd.pandas.json_normalize(yaml_obj)
+                        df = pd.DataFrame(yaml_obj)
+                        
+                        # Assume my_var is a variable containing valid JSON
+                        #json_str = json.dumps(subtasks) # Convert variable into JSON string
+                        #df = pd.read_json(json_str) # Read JSON string into dataframe
+                        #st.dataframe(df)
+                        
+                        # Create an empty list
+                        tasks = []
 
-                    # Loop over the dictionary column
-                    for i, task in enumerate(df.loc["Subtasks", df.columns[0]]):
-                        # Get the values for each key
-                        name = task.get('name')
-                        how = task.get('how')
-                        quote = task.get('motivational_quote')
+                        # Loop over the dictionary column
+                        for i, task in enumerate(df.loc["Subtasks", df.columns[0]]):
+                            # Get the values for each key
+                            name = task.get('name')
+                            how = task.get('how')
+                            quote = task.get('motivational_quote')
 
-                        # Append a tuple of the values to the list
-                        tasks.append((i+1, name, how, quote))
-
+                            # Append a tuple of the values to the list
+                            tasks.append((i+1, name, how, quote))
+                    st.success('Done!')
                     # Create a new dataframe from the list
                     new_df = pd.DataFrame(tasks, columns=["Task number", "name", "how", "motivational_quote"])
                     
