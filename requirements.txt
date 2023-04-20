@@ -3,3 +3,4 @@ pandas
 PyYAML
 streamlit
 openai
+ruamel.yaml

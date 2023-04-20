@@ -4,7 +4,8 @@ import streamlit as st
 from langchain.prompts import PromptTemplate
 from langchain import LLMChain
 from langchain.llms import OpenAIChat
-import yaml
+import ruamel.yaml
+from ruamel.yaml import YAML
 import pandas as pd
 import os
 import pickle
@@ -12,11 +13,11 @@ import pickle
 
 
 # Set the Streamlit page configuration, including the layout and page title/icon
-st.set_page_config(layout="wide", page_icon="💡", page_title="To-Do Mentor")
+st.set_page_config(layout="wide", page_icon="💡", page_title="Breakit")
 
 # Display the header for the application using HTML markdown
 st.markdown(
-    "<h1 style='text-align: center;'>Subtask Generator 💡</h1>",
+    "<h1 style='text-align: center;'>Breakit 💡</h1>",
     unsafe_allow_html=True)
 
 # Allow the user to enter their OpenAI API key
@@ -26,22 +27,25 @@ user_api_key = st.sidebar.text_input(
     type="password")
 
 async def main():
-    
+    #create placeholder empty tables
+    tab1_progress = st.empty()
     tab1_main = st.empty()
     
+   
     # Check if the user has entered an OpenAI API key
     if user_api_key == "":
         
         # Display a message asking the user to enter their API key
         st.markdown(
-            "<div style='text-align: center;'><h4>Enter your OpenAI API key to start 😉</h4></div>",
+            "<div style='text-align: center;'><h4>👈 Enter your OpenAI API key to start </h4></div>",
             unsafe_allow_html=True)
+        st.write("This is a demo of a method sending and retrieving structured data from a LLM to be used in downstream functions, API calls, additional LLM refinement, or database storage procedures.")
         
     else:
         # Set the OpenAI API key as an environment variable
         os.environ["OPENAI_API_KEY"] = user_api_key
         
-        # Allow the user to enter thir name char to do item
+        # Allow the user to enter their name char to do item
         advisee_name = st.sidebar.text_input(
             label="Your Name",
             placeholder="Bobby boy",
@@ -56,6 +60,8 @@ async def main():
             label="A task from your to-do list",
             placeholder="Clean the kitchen",
             type="default")
+        
+        subtask_count = st.sidebar.slider('Numer of Subtasks:', 1, 5, 10)
       
         # If the user has entered their details, display it (debug)
         if advisee_name != "" and character != "" and main_task != "":
@@ -73,127 +79,109 @@ async def main():
             try :
                 #async def llm_chain_result(query):   
                     #set up the prompt template
-                    template = """You are {character}, advising {advisee_name} on how to complete a task. Use {character}'s <motivational_quote>s that apply to the specific subtask. For <how> use vivid and descriptive language and maintain the vocabulary and voice of {character}. 
-
-' ' ' 
-main_task_n: {main_task}
-' ' '
-' ' '
-respond in the following YAML structure:
-main_task_n:
-  name: 
-  Subtasks:
-  - name: 
-    how: 
-    motivational_quote: 
-  - name: 
-    how: 
-    motivational_quote: 
-  - name: 
-    how: 
-    motivational_quote: 
-  - name: 
-    how: 
-    motivational_quote: 
-  - name: 
-    how: 
-    motivational_quote: 
-  summary_encouragement: (Give some final advice as {character} assuming they have not yet started the subtasks)
-' ' '"""            
+                    template = """You are {character}, advising {advisee_name} on how to complete a task. For <how> use vivid and descriptive language and maintain the vocabulary and voice of {character}. 
+                    ' ' ' 
+                    main_task: {main_task}
+                    number_of_subtasks: {subtask_count}
+                    ' ' '
+                    respond in the following YAML structure:
+                    ' ' '   
+                    - main_task:
+                      subtasks:
+                      - name: ""
+                          how: "(one concise sentence)"
+                          motivational_wisdom: "({character}s personal story about a similar experience)"
+                      summary_encouragement: "(Give some final advice as {character} assuming {advisee_name} has not yet started the subtasks)"
+                    ' ' '"""            
                     prompt = PromptTemplate(
-                        input_variables=["character", "advisee_name", "main_task"],
+                        input_variables=["character", "advisee_name", "main_task", "subtask_count"],
                         template=template,
                         )
                     #define the LLM and chain then run the chain
                     llm=OpenAIChat(model='gpt-3.5-turbo',temperature=1)
                     chain = LLMChain(llm=llm, prompt=prompt, verbose=True)
+                    
+                    with tab1_progress.container():
+                        progress_text = "Consulting your mentor: Can take up to 30s"
+                        my_bar = st.progress(5, text=progress_text)
+                    
                     #run the chain
                     with st.spinner('Consulting'):
-                        subtasks = chain.run({'character': character, 'advisee_name': advisee_name,'main_task': main_task})
-                    st.success('Response')
+                        subtasks = chain.run({'character': character, 'advisee_name': advisee_name,'main_task': main_task,'subtask_count': subtask_count})
+                    
                     print(subtasks)
                     #write subtasks to a file (debugging)
                     with open("subtasks.pkl", "wb") as f: 
-                        pickle.dump(subtasks, f) 
-                    #Show Preview
-                    with tab1_main.container():
-                        st.write("## Preview")
-                        st.write(subtasks)     
-                    #Parse JSON output
-                    template2 = """parse the following and return only the VALID YAML Structure, remove any unicode which may cause an error ' ' ' {subtasks} ' ' '"""
-                    prompt2 = PromptTemplate(
-                        input_variables=["subtasks"],
-                        template=template2,
-                        )
-                    with st.spinner('Cleaning output'):
-                        chain2 = LLMChain(llm=llm, prompt=prompt2, verbose=True)
-                    st.success('output cleaned')
-                    subtasks_parsed = chain2.run({'subtasks': subtasks})
-                    #print(subtasks_parsed)
-                    
-                    #write subtasks to a file (for debugging)
-                    #with open("subtasks_parsed.pkl", "wb") as f: 
-                    #    pickle.dump(subtasks_parsed, f) 
-
+                        pickle.dump(subtasks, f)    
                     # #read the subtasks from file (debugging)
                     # with open("subtasks.pkl", "rb") as f: 
                     #     subtasks = pickle.load(f) 
-                    # #print(subtasks)
+                    # # #print(subtasks) 
+                    
+                    # #Show Preview
+                    with tab1_main.container():
+                        st.write("## Preview")
+                        st.write(subtasks)  
+                    
+                    
+                    # #Parse JSON output
+                    # template2 = """parse the following and return only the VALID YAML Structure, remove any misplaced ", -, or : which may cause an error, remove all quote citations ("quote"-citation), if you can improve upon the tasks, keep the same number and re-write as necessary  ' ' ' {subtasks} ' ' '"""
+                    # prompt2 = PromptTemplate(
+                    #     input_variables=["subtasks"],
+                    #     template=template2,
+                    #     )
+                    
+                    # with tab1_progress.container():
+                    #     progress_text = "Refining output syntax"
+                    #     my_bar = st.progress(50, text=progress_text)
+                    
+                    # with st.spinner('Cleaning output'):
+                    #     chain2 = LLMChain(llm=llm, prompt=prompt2, verbose=True)
+                    
+                    # subtasks_parsed = chain2.run({'subtasks': subtasks})
+                    # st.write(subtasks_parsed)
+                    # #print(subtasks_parsed)
+                    
+                    # #write subtasks to a file (for debugging)
+                    # with open("subtasks_parsed.pkl", "wb") as f: 
+                    #     pickle.dump(subtasks_parsed, f) 
+
+                  
    
                                     
-                    
+                    with tab1_progress.container():
+                        progress_text = "Creating the data structures"
+                        my_bar = st.progress(75, text=progress_text)
                     #Clean up the otuput to remove quotes (could use another YAML parser to work around this)
                     #subtasks_parse_quote = subtasks.replace('"', '')
                     #st.write(subtasks_parse_quote)
-                    with st.spinner('refining'):
-                        yaml_str = subtasks_parsed
-                        # Parse the YAML string
-                        yaml_obj = yaml.safe_load(yaml_str)
-                        # Convert to pandas dataframe
-                        #df = pd.pandas.json_normalize(yaml_obj)
-                        df = pd.DataFrame(yaml_obj)
-                        
-                        # Assume my_var is a variable containing valid JSON
-                        #json_str = json.dumps(subtasks) # Convert variable into JSON string
-                        #df = pd.read_json(json_str) # Read JSON string into dataframe
-                        #st.dataframe(df)
-                        
-                        # Create an empty list
-                        tasks = []
-
-                        # Loop over the dictionary column
-                        for i, task in enumerate(df.loc["Subtasks", df.columns[0]]):
-                            # Get the values for each key
-                            name = task.get('name')
-                            how = task.get('how')
-                            quote = task.get('motivational_quote')
-
-                            # Append a tuple of the values to the list
-                            tasks.append((i+1, name, how, quote))
-                    st.success('Done!')
-                    # Create a new dataframe from the list
-                    new_df = pd.DataFrame(tasks, columns=["Task number", "name", "how", "motivational_quote"])
+                    
+                     
+                    yaml=YAML(typ='safe')   # default, if not specfied, is 'rt' (round-trip)
+                    subtasks_list = ruamel.yaml.safe_load(subtasks)
+                    
+                    st.write("### Original Response as List")
+                    st.write(subtasks_list)
+                    
+                    # Dataframes
+                    subtasks_df = pd.DataFrame(subtasks_list)
+                    # Extract Subtasks column
+                    subtasks_extracted_list = subtasks_df['subtasks']
+                    # Convert to another dataframe
+                    subtasks_extracted_df = pd.DataFrame(subtasks_extracted_list[0])
+                    
+                    st.write("### Original response as Dataframe")
+                    st.dataframe(subtasks_df)
                     
                     with tab1_main.container():
-                        st.dataframe(new_df, use_container_width=True)
-                        st.write(df.loc["summary_encouragement",df.columns[0]])
-                    # Print the new dataframe
-                    #print(new_df)
-
-
-                    # Loop over the rows of the new dataframe
-                    for index, row in new_df.iterrows():
-                        # Get the values for each column
-                        task_number = row["Task number"]
-                        name = row["name"]
-                        how = row["how"]
-                        quote = row["motivational_quote"]
-
-                        # Print them in a formatted way
-                        print(f'Task {task_number}: {name}\nHow: {how}\nQuote: "{quote}"\n');
-
-                    #print("\nSummary: " , df.loc["summary_encouragement",df.columns[0]])
-                    st.write(subtasks) 
+                        st.write("### Extracted Subtasks as dataframe")
+                        st.dataframe(subtasks_extracted_df)
+                        summary_encouragement = subtasks_df['summary_encouragement']
+                        st.write(summary_encouragement.item())
+                    
+                    with tab1_progress.container():
+                        progress_text = "Dataframe built"
+                        my_bar = st.progress(100, text=progress_text)
                     
 
             except Exception as e:
